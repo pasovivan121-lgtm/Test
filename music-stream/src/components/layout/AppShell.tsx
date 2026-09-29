@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col">
+    <div className="relative flex min-w-0 flex-1 flex-col md:pl-[248px]">
       <div
         className={cn(
           "pointer-events-none fixed inset-x-0 top-0 z-30 h-24 bg-gradient-to-b from-black/55 to-transparent opacity-0 transition-opacity duration-500 md:inset-x-[248px]",

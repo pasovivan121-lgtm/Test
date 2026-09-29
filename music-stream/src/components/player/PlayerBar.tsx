@@ -118,7 +118,7 @@ export function PlayerBar() {
 
   if (!currentTrack) {
     return (
-      <div className="glass fixed inset-x-0 bottom-0 z-40 hidden h-[76px] items-center justify-center border-t border-white/[0.07] text-[12.5px] text-white/35 md:flex">
+      <div className="glass fixed inset-x-0 bottom-0 z-40 hidden h-[76px] items-center justify-center border-t border-white/[0.07] text-[12.5px] text-white/35 md:left-[248px] md:flex">
         Pick something to play — your queue is empty.
       </div>
     );
@@ -128,7 +128,7 @@ export function PlayerBar() {
     <>
       <div
         className={cn(
-          "glass fixed inset-x-0 bottom-[57px] z-40 border-t border-white/[0.08] transition-transform duration-300 md:bottom-0 md:px-3",
+          "glass fixed inset-x-0 bottom-[57px] z-40 border-t border-white/[0.08] transition-transform duration-300 md:bottom-0 md:left-[248px] md:px-3",
           expanded ? "translate-y-[calc(100%-57px-16px)] md:hidden" : "translate-y-0"
         )}
       >

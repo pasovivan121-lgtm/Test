@@ -41,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>
           <div className="flex min-h-dvh w-full">
             <Sidebar />
+            {/* The sidebar is fixed (out of flow), so main content is offset manually. */}
             <AppShell>
               <main className="min-w-0 flex-1 pb-40 md:pb-32 lg:pb-28">{children}</main>
             </AppShell>

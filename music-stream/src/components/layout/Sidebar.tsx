@@ -9,6 +9,7 @@ import {
   Library,
   Radio,
   Podcast,
+  Globe2,
   BarChart3,
   Plus,
   Heart,
@@ -32,6 +33,7 @@ const NAV = [
 ];
 
 const EXPLORE = [
+  { href: "/explore", label: "Live catalogue", icon: Globe2 },
   { href: "/charts", label: "Charts", icon: BarChart3 },
   { href: "/genre/alt-pop", label: "Genres", icon: Disc3 },
   { href: "/radio", label: "Radio", icon: Radio },

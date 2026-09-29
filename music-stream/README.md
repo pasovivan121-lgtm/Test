@@ -28,6 +28,26 @@ npm run start    # serve the production build
 - **Local synth fallback** (`src/hooks/useAudioEngine.ts`) — when a track has no stream URL, a
   detuned Web Audio pad plus a simulated timeline keep playback fully functional offline
 
+### Live catalogue (Audius)
+`/explore` pulls a real, playable catalogue from **Audius** — an independent, artist-owned music
+network with an open, keyless API.
+
+- Live search across the whole network, debounced, with 20 genre filters
+- Trending tracks and trending playlists, refreshed per request
+- Real MP3 streaming over HTTP range requests, played through the same player as everything else
+- Real cover art, durations, BPM, play counts, licensing info per track
+- Every track is queueable, likeable, playlistable and seekable like any other track
+- Blended into `/search` alongside the curated catalogue, and surfaced on the home page
+- No API key, no auth, CORS `*` — works directly from the browser
+
+| Module | Role |
+|---|---|
+| `src/lib/audius.ts` | Typed API client, error handling, abortable requests, domain mapping |
+| `src/hooks/useAudius.ts` | Debounced search + playlist fetching with cleanup |
+| `src/store/external.ts` | Bridges Audius tracks into the `Track` model the player expects |
+| `src/components/media/AudiusRow.tsx` | Row + card components with artwork fallback |
+| `src/app/explore/page.tsx` | Full catalogue browse page |
+
 ### Spotify-parity features
 - **Home** — greeting, quick picks, "Jump back in", Made For You, mood browse, new releases, trending
 - **Search** — full-text across songs / artists / albums / playlists / podcasts, with type tabs
@@ -79,15 +99,23 @@ src/
 │   └── player/               # PlayerBar, QueuePanel, NowPlayingView, modals, settings
 ├── data/mock.ts              # 8 artists · 11 albums · 34 tracks · 8 playlists · 3 shows
 │                             #   8 episodes · 6 genres · 8 moods · 12 categories
+│                             #   (curated catalogue; the live Audius catalogue is separate)
+├── lib/audius.ts             # live catalogue client
 ├── hooks/useAudioEngine.ts   # shared audio element + synth fallback
+├── hooks/useAudius.ts        # debounced live-catalogue queries
 ├── lib/utils.ts              # formatting, class merging
-├── store/                    # zustand: player · library (persisted) · ui
+├── store/                    # zustand: player · library (persisted) · ui · external
 └── types/index.ts            # full domain model
 ```
 
 ## Notes
 
-Catalogue data is local and fictional — no label, artist or audio asset is used or implied. Playback
-runs through a local Web Audio engine so the experience is complete and functional with no network
-dependency. Swapping in a real catalogue means populating `Track.audioUrl`; the engine picks it up
-automatically and uses the HTML audio path instead of the synth fallback.
+The **curated** catalogue in `src/data/mock.ts` is local and fictional — no label or artist is used or
+implied. The **live** catalogue comes from Audius, where artists upload their own work and retain
+ownership, and is fetched live at runtime.
+
+Playback has two paths, chosen automatically per track:
+- tracks with an `audioUrl` (all Audius tracks) stream real MP3 through `HTMLAudioElement`
+- tracks without one use a local Web Audio synth so the demo catalogue stays functional offline
+
+Both keep seek, queue, shuffle, repeat and advance-on-end fully working.

@@ -167,6 +167,11 @@ export function useAudioEngine() {
     };
     const onWaiting = () => usePlayerStore.getState().setBuffering(true);
     const onPlaying = () => usePlayerStore.getState().setBuffering(false);
+    // Mirror playback position into the store so every UI surface (player bar,
+    // full-screen view, lyrics, queue) stays in sync.
+    const onTimeUpdate = () => {
+      usePlayerStore.setState({ currentTime: audio.currentTime });
+    };
     const onError = () => {
       usePlayerStore.getState().setBuffering(false);
       usePlayerStore.getState().setError("Stream unavailable — using local audio engine");
@@ -176,6 +181,7 @@ export function useAudioEngine() {
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("waiting", onWaiting);
     audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("error", onError);
     void store;
 
@@ -184,6 +190,7 @@ export function useAudioEngine() {
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("waiting", onWaiting);
       audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("error", onError);
     };
   }, []);

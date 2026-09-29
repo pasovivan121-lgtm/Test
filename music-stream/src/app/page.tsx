@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useEffect, useState } from "react";
 import { Play, Sparkles, TrendingUp, Clock, Flame } from "lucide-react";
 import { TopBar } from "@/components/layout/TopBar";
-import { MediaCard, Shelf, ArtistCard } from "@/components/media/Cards";
+import { MediaCard, Shelf, ArtistCard, LiveCatalogueShelf } from "@/components/media/Cards";
 import { TrackRow } from "@/components/media/TrackRow";
 import { Artwork } from "@/components/Artwork";
 import { usePlayerStore } from "@/store/player";
@@ -176,6 +176,9 @@ export default function HomePage() {
             <MediaCard key={item.id} {...item} />
           ))}
         </Shelf>
+
+        {/* Live catalogue — Audius */}
+        <LiveCatalogueShelf />
 
         {/* Made for you */}
         <Shelf

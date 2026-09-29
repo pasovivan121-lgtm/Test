@@ -38,7 +38,7 @@ export interface AudiusTrack {
   duration: number;
   genre: string;
   mood?: string | null;
-  tags?: string[];
+  tags?: string[] | string;
   play_count: number;
   favorite_count?: number;
   repost_count?: number;
@@ -91,7 +91,8 @@ export class AudiusError extends Error {
 }
 
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(withApp(path), {
+  const url = path.startsWith("http") ? path : `${API}${path.startsWith("/") ? path : `/${path}`}`;
+  const res = await fetch(withApp(url), {
     signal,
     headers: { Accept: "application/json" },
   });
@@ -110,6 +111,20 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
 
 const clean = (s?: string | null) => (s ?? "").trim();
 const strip = (s?: string | null) => clean(s).replace(/\s+/g, " ");
+
+/**
+ * `tags` arrives as an array on some endpoints and a comma-separated string
+ * on others, so normalise before use.
+ */
+function normaliseTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.map((t) => strip(String(t)).split(":")[0]).filter(Boolean);
+  if (typeof tags === "string")
+    return tags
+      .split(",")
+      .map((t) => t.split(":")[0].trim())
+      .filter(Boolean);
+  return [];
+}
 
 /* ------------------------------------------------------------------ */
 /*  Public queries                                                     */
@@ -209,6 +224,7 @@ export interface AudiusMappedTrack {
   isExplicit: boolean;
   isStreamable: boolean;
   license: string;
+  copyrightLine: string;
   bpm: number | null;
   musicalKey: string | null;
   source: "audius";
@@ -217,8 +233,10 @@ export interface AudiusMappedTrack {
 }
 
 export function mapTrack(t: AudiusTrack): AudiusMappedTrack {
-  const genres = [t.genre, ...(t.tags ?? []).map((x) => x.split(":")[0])].filter(Boolean);
-  const moods = [t.mood, t.musical_key].filter((x): x is string => !!x && x !== "None");
+  const extraTags = normaliseTags(t.tags);
+  const moods = [t.mood, t.musical_key, ...extraTags].filter(
+    (x): x is string => !!x && x !== "None"
+  );
   return {
     id: t.id,
     title: strip(t.title) || "Untitled",
@@ -228,7 +246,7 @@ export function mapTrack(t: AudiusTrack): AudiusMappedTrack {
     artistAvatar: artworkUrl(t.user?.profile_picture, "150x150"),
     duration: t.duration ?? 0,
     genre: t.genre || "Other",
-    mood: [...new Set(moods)],
+    mood: [...new Set(moods)].slice(0, 6),
     artwork: artworkUrl(t.artwork),
     playCount: t.play_count ?? 0,
     favoriteCount: t.favorite_count ?? 0,
@@ -238,6 +256,7 @@ export function mapTrack(t: AudiusTrack): AudiusMappedTrack {
     isExplicit: !!t.is_explicit,
     isStreamable: !!t.is_streamable,
     license: t.license ?? "All rights reserved",
+    copyrightLine: strip(t.copyright_line),
     bpm: t.bpm ?? null,
     musicalKey: t.musical_key && t.musical_key !== "None" ? t.musical_key : null,
     source: "audius" as const,

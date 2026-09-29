@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Play, Check } from "lucide-react";
+import { Play, Check, Globe2, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { cn, formatCount, formatDate } from "@/lib/utils";
 import type { Artist, Episode } from "@/types";
 import { Artwork } from "@/components/Artwork";
 import { usePlayerStore } from "@/store/player";
 import { useLibraryStore } from "@/store/library";
+import { useAudiusSearch } from "@/hooks/useAudius";
+import { toPlayerTrack } from "@/store/external";
 import toast from "react-hot-toast";
 import { PlayingIndicator } from "@/components/player/PlayerBar";
 
@@ -315,5 +317,85 @@ export function StatTile({ label, value }: { label: string; value: string }) {
       <div className="text-[17px] font-bold text-white">{value}</div>
       <div className="mt-0.5 text-[11px] text-white/40">{label}</div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Live catalogue shelf (Audius)                                      */
+/* ------------------------------------------------------------------ */
+
+export function LiveCatalogueShelf() {
+  const { tracks, loading, error } = useAudiusSearch("", "", true);
+  const { playTrack } = usePlayerStore();
+
+  return (
+    <section className="mb-8">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-3 px-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-[19px] font-bold tracking-tight text-white sm:text-[21px]">
+            <Globe2 className="h-[18px] w-[18px] text-emerald-400" /> Live catalogue
+          </h2>
+          <p className="mt-0.5 truncate text-[12.5px] text-white/45">
+            {loading
+              ? "Connecting to the Audius network…"
+              : error
+                ? error
+                : "Millions of real songs from independent artists — free and ad-free"}
+          </p>
+        </div>
+        <Link
+          href="/explore"
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3.5 py-2 text-[11.5px] font-semibold text-emerald-300 transition hover:bg-emerald-400/20"
+        >
+          Browse all <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
+      {loading && tracks.length === 0 ? (
+        <div className="grid auto-cols-[minmax(150px,1fr)] grid-flow-col gap-1 overflow-hidden lg:grid-flow-row lg:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i}>
+              <div className="shimmer aspect-square w-full rounded-xl" />
+              <div className="shimmer mt-2.5 h-3 w-3/4 rounded" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="-mx-1 overflow-x-auto no-scrollbar">
+          <div className="grid auto-cols-[minmax(150px,1fr)] grid-flow-col gap-1 px-1 sm:auto-cols-[minmax(168px,1fr)] lg:auto-cols-[minmax(186px,1fr)]">
+            {tracks.slice(0, 10).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => playTrack(toPlayerTrack(t), tracks.map(toPlayerTrack), "radio", "audius-home")}
+                className="group text-left"
+              >
+                <AudiusThumb track={t} />
+                <div className="mt-2.5 px-0.5">
+                  <div className="truncate text-[13px] font-semibold text-white/90">{t.title}</div>
+                  <div className="truncate text-[11.5px] text-white/45">{t.artistName}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function AudiusThumb({ track }: { track: { id: string; artwork: string; title: string } }) {
+  const [failed, setFailed] = useState(false);
+  if (!track.artwork || failed) {
+    return <Artwork id={track.id} rounded="rounded-xl" className="aspect-square w-full shadow-[0_10px_30px_rgba(0,0,0,0.45)]" seed={track.title.length} alt={track.title} />;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={track.artwork}
+      alt={track.title}
+      onError={() => setFailed(true)}
+      loading="lazy"
+      className="aspect-square w-full rounded-xl object-cover shadow-[0_10px_30px_rgba(0,0,0,0.45)] transition group-hover:brightness-110"
+    />
   );
 }

@@ -18,7 +18,9 @@ import {
   TRACKS,
 } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { Search as SearchIcon, TrendingUp, X } from "lucide-react";
+import { Search as SearchIcon, TrendingUp, X, Globe2 } from "lucide-react";
+import { AudiusRow } from "@/components/media/AudiusRow";
+import { useAudiusSearch } from "@/hooks/useAudius";
 
 type Tab = "all" | "tracks" | "artists" | "albums" | "playlists" | "podcasts";
 
@@ -52,6 +54,8 @@ function SearchContent() {
     setLastQuery(query);
     setTab("all");
   }
+
+  const { tracks: externalTracks, loading: loadingExternal } = useAudiusSearch(query, "", true);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -165,7 +169,8 @@ function SearchContent() {
         <div>
           <h1 className="text-gradient text-[26px] font-black tracking-tight sm:text-[34px]">{query}</h1>
           <p className="mt-0.5 text-[12.5px] text-white/45">
-            {total} result{total === 1 ? "" : "s"}
+            {total} curated result{total === 1 ? "" : "s"}
+            {!loadingExternal && externalTracks.length > 0 && ` · ${externalTracks.length} live from Audius`}
           </p>
         </div>
         <a
@@ -201,6 +206,25 @@ function SearchContent() {
         </div>
       ) : (
         <div className="space-y-9">
+          {showTracks && externalTracks.length > 0 && (
+            <section>
+              <h2 className="mb-2 flex items-center gap-2 text-[19px] font-bold text-white">
+                <Globe2 className="h-4 w-4 text-emerald-400" /> Live from Audius
+              </h2>
+              <div className="max-w-4xl">
+                {externalTracks.slice(0, 10).map((t, i) => (
+                  <AudiusRow key={t.id} track={t} queue={externalTracks} index={i} />
+                ))}
+              </div>
+              <a
+                href={`/explore?q=${encodeURIComponent(query)}`}
+                className="mt-2 inline-block text-[12px] font-semibold text-emerald-400/80 transition hover:text-emerald-400"
+              >
+                See all {externalTracks.length} live results →
+              </a>
+            </section>
+          )}
+
           {showTracks && results!.tracks.length > 0 && (
             <section>
               <h2 className="mb-2 text-[19px] font-bold text-white">Songs</h2>
